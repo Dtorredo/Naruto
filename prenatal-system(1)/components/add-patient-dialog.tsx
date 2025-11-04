@@ -31,15 +31,37 @@ export function AddPatientDialog() {
     const formData = new FormData(e.currentTarget)
     const supabase = createClient()
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const email = formData.get("email") as string
+    const password = Math.random().toString(36).slice(-8)
+
+    const { data: newUser, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: `${formData.get("firstName")} ${formData.get("lastName")}`,
+          role: "patient",
+        },
+      },
+    })
+
+    if (signUpError) {
+      console.error("Error creating user:", signUpError)
+      setIsLoading(false)
+      return
+    }
+
+    if (!newUser.user) {
+      console.error("No user returned after sign up")
+      setIsLoading(false)
+      return
+    }
 
     const { error } = await supabase.from("patients").insert({
       first_name: formData.get("firstName") as string,
       last_name: formData.get("lastName") as string,
       date_of_birth: formData.get("dateOfBirth") as string,
-      email: formData.get("email") as string,
+      email: email,
       phone: formData.get("phone") as string,
       address: formData.get("address") as string,
       emergency_contact_name: formData.get("emergencyContactName") as string,
@@ -47,7 +69,7 @@ export function AddPatientDialog() {
       blood_type: formData.get("bloodType") as string,
       allergies: formData.get("allergies") as string,
       medical_history: formData.get("medicalHistory") as string,
-      created_by: user?.id,
+      user_id: newUser.user.id,
     })
 
     setIsLoading(false)
