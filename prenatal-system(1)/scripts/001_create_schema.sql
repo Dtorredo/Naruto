@@ -122,100 +122,118 @@ alter table public.prescriptions enable row level security;
 alter table public.vaccinations enable row level security;
 
 -- RLS Policies for profiles
+drop policy if exists "Users can view their own profile" on public.profiles;
 create policy "Users can view their own profile"
   on public.profiles for select
   using (auth.uid() = id);
 
-create policy "Users can update their own profile"
-  on public.profiles for update
-  using (auth.uid() = id);
-
 -- RLS Policies for patients (all authenticated users can access)
+drop policy if exists "Authenticated users can view patients" on public.patients;
 create policy "Authenticated users can view patients"
   on public.patients for select
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can insert patients" on public.patients;
 create policy "Authenticated users can insert patients"
   on public.patients for insert
   with check (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can update patients" on public.patients;
 create policy "Authenticated users can update patients"
   on public.patients for update
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can delete patients" on public.patients;
 create policy "Authenticated users can delete patients"
   on public.patients for delete
   using (auth.role() = 'authenticated');
 
 -- RLS Policies for prenatal_records
+drop policy if exists "Authenticated users can view prenatal records" on public.prenatal_records;
 create policy "Authenticated users can view prenatal records"
   on public.prenatal_records for select
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can insert prenatal records" on public.prenatal_records;
 create policy "Authenticated users can insert prenatal records"
   on public.prenatal_records for insert
   with check (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can update prenatal records" on public.prenatal_records;
 create policy "Authenticated users can update prenatal records"
   on public.prenatal_records for update
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can delete prenatal records" on public.prenatal_records;
 create policy "Authenticated users can delete prenatal records"
   on public.prenatal_records for delete
   using (auth.role() = 'authenticated');
 
 -- RLS Policies for appointments
+drop policy if exists "Authenticated users can view appointments" on public.appointments;
 create policy "Authenticated users can view appointments"
   on public.appointments for select
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can insert appointments" on public.appointments;
 create policy "Authenticated users can insert appointments"
   on public.appointments for insert
   with check (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can update appointments" on public.appointments;
 create policy "Authenticated users can update appointments"
   on public.appointments for update
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can delete appointments" on public.appointments;
 create policy "Authenticated users can delete appointments"
   on public.appointments for delete
   using (auth.role() = 'authenticated');
 
 -- RLS Policies for checkup_records
+drop policy if exists "Authenticated users can view checkup records" on public.checkup_records;
 create policy "Authenticated users can view checkup records"
   on public.checkup_records for select
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can insert checkup records" on public.checkup_records;
 create policy "Authenticated users can insert checkup records"
   on public.checkup_records for insert
   with check (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can update checkup records" on public.checkup_records;
 create policy "Authenticated users can update checkup records"
   on public.checkup_records for update
   using (auth.role() = 'authenticated');
 
 -- RLS Policies for prescriptions
+drop policy if exists "Authenticated users can view prescriptions" on public.prescriptions;
 create policy "Authenticated users can view prescriptions"
   on public.prescriptions for select
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can insert prescriptions" on public.prescriptions;
 create policy "Authenticated users can insert prescriptions"
   on public.prescriptions for insert
   with check (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can update prescriptions" on public.prescriptions;
 create policy "Authenticated users can update prescriptions"
   on public.prescriptions for update
   using (auth.role() = 'authenticated');
 
 -- RLS Policies for vaccinations
+drop policy if exists "Authenticated users can view vaccinations" on public.vaccinations;
 create policy "Authenticated users can view vaccinations"
   on public.vaccinations for select
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can insert vaccinations" on public.vaccinations;
 create policy "Authenticated users can insert vaccinations"
   on public.vaccinations for insert
   with check (auth.role() = 'authenticated');
 
+drop policy if exists "Authenticated users can update vaccinations" on public.vaccinations;
 create policy "Authenticated users can update vaccinations"
   on public.vaccinations for update
   using (auth.role() = 'authenticated');

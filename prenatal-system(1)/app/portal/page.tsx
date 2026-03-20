@@ -18,9 +18,9 @@ export default async function PatientPortalPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle>No Patient Record Found</CardTitle>
+            <CardTitle>Patient Record Pending</CardTitle>
             <CardDescription>
-              Your account is not linked to a patient record. Please contact your healthcare provider.
+              Your account hasn&apos;t been linked to a patient record yet. A clinic staff member will complete this step.
             </CardDescription>
           </CardHeader>
         </Card>

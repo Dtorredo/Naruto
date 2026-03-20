@@ -5,10 +5,28 @@ import { Button } from "@/components/ui/button"
 import { Activity, Calendar, FileText, LayoutDashboard, LogOut, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 export function DashboardNav() {
   const pathname = usePathname()
   const router = useRouter()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const loadRole = async () => {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) return
+
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+      setIsAdmin(profile?.role === "admin")
+    }
+
+    loadRole()
+  }, [])
 
   const handleSignOut = async () => {
     const supabase = createClient()
@@ -21,6 +39,7 @@ export function DashboardNav() {
     { href: "/dashboard/patients", label: "Patients", icon: Users },
     { href: "/dashboard/appointments", label: "Appointments", icon: Calendar },
     { href: "/dashboard/records", label: "Medical Records", icon: FileText },
+    ...(isAdmin ? [{ href: "/dashboard/admin/users", label: "Users", icon: Users }] : []),
   ]
 
   return (

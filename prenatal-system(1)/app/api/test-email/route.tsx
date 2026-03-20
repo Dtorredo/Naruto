@@ -3,8 +3,13 @@ import { Resend } from "resend"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const authHeader = request.headers.get("authorization")
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { data, error } = await resend.emails.send({
       from: "Prenatal Care <onboarding@resend.dev>",
       to: ["delivered@resend.dev"], // Resend test email

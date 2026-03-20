@@ -14,6 +14,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/auth/login")
   }
 
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+
+  if (profile?.role === "patient") {
+    redirect("/portal")
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardNav />

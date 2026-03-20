@@ -14,7 +14,7 @@ A modern, secure prenatal patient management system built with Next.js, Supabase
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 with App Router
+- **Framework**: Next.js 14 with App Router
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth
 - **Styling**: Tailwind CSS v4
@@ -40,19 +40,24 @@ npm install
 
 3. Set up environment variables in your Vercel project or create a `.env.local` file:
 
-\`\`\`
+```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL=http://localhost:3000/dashboard
-\`\`\`
+NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL=http://localhost:3000/auth/redirect
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
 
-4. Run the database migration scripts in the \`scripts\` folder through the v0 interface or Supabase SQL editor
+4. Run the database migration scripts in the `scripts` folder through the v0 interface or Supabase SQL editor
+   - Patient accounts are created during signup, but patient records are linked by staff after onboarding.
+   - Staff can link a patient record to an account by entering the patient email in the Add Patient dialog.
+   - The app will send an invite email so the patient can set a password and access the portal.
+   - Run `scripts/004_add_patient_portal.sql` to register helper RPCs used during linkage.
 
 5. Start the development server:
 
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 
 6. Open [http://localhost:3000](http://localhost:3000) in your browser
 

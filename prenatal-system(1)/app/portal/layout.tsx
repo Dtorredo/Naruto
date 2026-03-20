@@ -15,9 +15,13 @@ export default async function PortalLayout({ children }: { children: React.React
   }
 
   // Check if user is a patient
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  const { data: profile, error } = await supabase.from("profiles").select("role").eq("id", user.id).single()
 
-  if (!profile || profile.role !== "patient") {
+  if (error || !profile) {
+    redirect("/auth/redirect")
+  }
+
+  if (profile.role !== "patient") {
     redirect("/dashboard")
   }
 

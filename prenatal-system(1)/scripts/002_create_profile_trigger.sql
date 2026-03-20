@@ -11,7 +11,7 @@ begin
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data ->> 'full_name', 'New User'),
-    coalesce(new.raw_user_meta_data ->> 'role', 'doctor')
+    coalesce(new.raw_user_meta_data ->> 'role', 'patient')
   )
   on conflict (id) do nothing;
   

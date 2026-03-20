@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Activity } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
 
 export default function LoginPage() {
@@ -18,6 +18,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isInviteOnly = searchParams.get("invite") === "1"
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,12 +31,9 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
-        },
       })
       if (error) throw error
-      router.push("/dashboard")
+      router.push("/auth/redirect")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
@@ -55,6 +54,11 @@ export default function LoginPage() {
             <CardDescription>Sign in to access your patient management dashboard</CardDescription>
           </CardHeader>
           <CardContent>
+            {isInviteOnly && (
+              <div className="mb-4 rounded-md bg-muted/60 p-3 text-sm text-muted-foreground">
+                Sign-ups are invite-only. Ask your clinic to send an invite to create your account.
+              </div>
+            )}
             <form onSubmit={handleLogin}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
@@ -82,12 +86,6 @@ export default function LoginPage() {
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
-              </div>
-              <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link href="/auth/sign-up" className="font-medium text-primary underline underline-offset-4">
-                  Sign up
-                </Link>
               </div>
             </form>
           </CardContent>

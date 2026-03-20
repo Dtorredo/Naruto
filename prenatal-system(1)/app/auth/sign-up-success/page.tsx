@@ -16,18 +16,18 @@ export default function SignUpSuccessPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <Mail className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>We&apos;ve sent you a confirmation link</CardDescription>
+            <CardTitle className="text-2xl">Account Created</CardTitle>
+            <CardDescription>Your account is pending clinic linkage</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-center text-sm text-muted-foreground leading-relaxed">
-              Thank you for signing up! Please check your email inbox and click the confirmation link to activate your
-              account. Once confirmed, you&apos;ll be able to sign in and start managing your patients.
+              Thanks for signing up! A clinic staff member will link your account to a patient record before you can
+              access your portal.
             </p>
             <div className="rounded-md bg-muted/50 p-4">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                <strong>Note:</strong> If you don&apos;t see the email, please check your spam folder. The confirmation
-                link will expire in 24 hours.
+                <strong>Note:</strong> If email confirmation is enabled in Supabase, you&apos;ll still need to confirm your
+                email before signing in.
               </p>
             </div>
             <Link href="/auth/login" className="block">
