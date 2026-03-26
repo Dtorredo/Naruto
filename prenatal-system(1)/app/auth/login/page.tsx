@@ -10,9 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Activity } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { Suspense, useState } from "react"
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -42,18 +42,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-b from-sky-50 to-white p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-2">
-          <Activity className="h-12 w-12 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">PreNatal Care</h1>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Welcome Back</CardTitle>
-            <CardDescription>Sign in to access your patient management dashboard</CardDescription>
-          </CardHeader>
-          <CardContent>
+    <CardContent>
             {isInviteOnly && (
               <div className="mb-4 rounded-md bg-muted/60 p-3 text-sm text-muted-foreground">
                 Sign-ups are invite-only. Ask your clinic to send an invite to create your account.
@@ -89,6 +78,25 @@ export default function LoginPage() {
               </div>
             </form>
           </CardContent>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-b from-sky-50 to-white p-6 md:p-10">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 flex flex-col items-center gap-2">
+          <Activity className="h-12 w-12 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground">PreNatal Care</h1>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Welcome Back</CardTitle>
+            <CardDescription>Sign in to access your patient management dashboard</CardDescription>
+          </CardHeader>
+          <Suspense fallback={<CardContent>Loading...</CardContent>}>
+            <LoginForm />
+          </Suspense>
         </Card>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { Calendar, Mail, Phone, MapPin, Droplet, AlertCircle, FileText, Activity
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PrescriptionPDFButton } from "@/components/prescription-pdf-button"
+import { PatientActionButtons } from "@/components/patient-action-buttons"
 
 export default async function PatientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -61,18 +62,25 @@ export default async function PatientDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/patients">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            {patient.first_name} {patient.last_name}
-          </h1>
-          <p className="text-muted-foreground">Patient Details</p>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/patients">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              {patient.first_name} {patient.last_name}
+            </h1>
+            <p className="text-muted-foreground">Patient Details</p>
+          </div>
         </div>
+        <PatientActionButtons
+          patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
+          patientEmail={patient.email}
+        />
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">

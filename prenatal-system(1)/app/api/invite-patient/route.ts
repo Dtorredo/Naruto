@@ -46,8 +46,9 @@ export async function POST(request: Request) {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
+  const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '')
   const redirectTo =
-    process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${request.headers.get("origin")}/auth/redirect`
+    process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${origin}/auth/set-password?email=${encodeURIComponent(email)}`
 
   const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
     redirectTo,
