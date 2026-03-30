@@ -1,10 +1,16 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import { getSupabaseCredentials } from "./env"
 
 export async function createClient() {
   const cookieStore = await cookies()
+  const { url, anonKey } = getSupabaseCredentials()
 
-  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+  if (!url || !anonKey) {
+    throw new Error("Supabase URL and Anon Key are missing at runtime on the server!")
+  }
+
+  return createServerClient(url, anonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll()

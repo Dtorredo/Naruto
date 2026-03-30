@@ -3,13 +3,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { AddPatientDialog } from "@/components/add-patient-dialog"
-import { Mail, Phone, Calendar, Droplet } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Mail, Phone, Calendar, Droplet, Search } from "lucide-react"
 import Link from "next/link"
 
-export default async function PatientsPage() {
+export default async function PatientsPage({
+  searchParams,
+}: {
+  searchParams?: {
+    query?: string
+  }
+}) {
   const supabase = await createClient()
 
   const { data: patients } = await supabase.from("patients").select("*").order("created_at", { ascending: false })
+
+  const query = searchParams?.query?.trim().toLowerCase() ?? ""
+  const filteredPatients = patients?.filter((patient) => {
+    if (!query) return true
+
+    const searchableFields = [patient.first_name, patient.last_name, patient.email, patient.phone, patient.blood_type]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+
+    return searchableFields.includes(query)
+  })
 
   const calculateAge = (dateOfBirth: string) => {
     const today = new Date()
@@ -32,13 +51,29 @@ export default async function PatientsPage() {
         <AddPatientDialog />
       </div>
 
-      <div className="flex items-center gap-4">
-        <Input placeholder="Search patients..." className="max-w-sm" />
-      </div>
+      <form className="flex flex-col gap-3 sm:flex-row sm:items-center" action="/dashboard/patients" method="get">
+        <div className="relative w-full max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            name="query"
+            defaultValue={searchParams?.query ?? ""}
+            placeholder="Search patients by name, email, phone, or blood type..."
+            className="pl-9"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Button type="submit">Search</Button>
+          {query && (
+            <Button asChild type="button" variant="outline">
+              <Link href="/dashboard/patients">Clear</Link>
+            </Button>
+          )}
+        </div>
+      </form>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {patients && patients.length > 0 ? (
-          patients.map((patient) => (
+        {filteredPatients && filteredPatients.length > 0 ? (
+          filteredPatients.map((patient) => (
             <Link key={patient.id} href={`/dashboard/patients/${patient.id}`}>
               <Card className="transition-all hover:shadow-md cursor-pointer">
                 <CardHeader>
@@ -80,7 +115,9 @@ export default async function PatientsPage() {
         ) : (
           <Card className="col-span-full">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground">No patients found. Add your first patient to get started.</p>
+              <p className="text-muted-foreground">
+                {query ? "No patients match your search." : "No patients found. Add your first patient to get started."}
+              </p>
             </CardContent>
           </Card>
         )}

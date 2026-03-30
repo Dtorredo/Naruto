@@ -2,15 +2,19 @@
 
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Activity, Calendar, FileText, LayoutDashboard, LogOut, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
+const STAFF_ROLES = new Set(["doctor", "nurse", "admin"])
+
 export function DashboardNav() {
   const pathname = usePathname()
   const router = useRouter()
   const [isAdmin, setIsAdmin] = useState(false)
+  const [pendingRescheduleCount, setPendingRescheduleCount] = useState(0)
 
   useEffect(() => {
     const loadRole = async () => {
@@ -22,7 +26,18 @@ export function DashboardNav() {
       if (!user) return
 
       const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-      setIsAdmin(profile?.role === "admin")
+
+      const role = profile?.role
+      setIsAdmin(role === "admin")
+
+      if (!role || !STAFF_ROLES.has(role)) return
+
+      const { count } = await supabase
+        .from("appointment_reschedule_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending")
+
+      setPendingRescheduleCount(count ?? 0)
     }
 
     loadRole()
@@ -53,11 +68,17 @@ export function DashboardNav() {
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
+            const showPendingBadge = item.href === "/dashboard/appointments" && pendingRescheduleCount > 0
             return (
               <Link key={item.href} href={item.href}>
                 <Button variant={isActive ? "secondary" : "ghost"} className="gap-2">
                   <Icon className="h-4 w-4" />
                   {item.label}
+                  {showPendingBadge && (
+                    <Badge variant="destructive" className="ml-1 h-5 min-w-5 rounded-full px-1.5 text-[10px]">
+                      {pendingRescheduleCount}
+                    </Badge>
+                  )}
                 </Button>
               </Link>
             )

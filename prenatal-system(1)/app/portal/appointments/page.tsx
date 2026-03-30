@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PatientRescheduleActions } from "@/components/patient-reschedule-actions"
 
 export default async function PatientAppointmentsPage() {
   const supabase = await createClient()
@@ -23,6 +24,7 @@ export default async function PatientAppointmentsPage() {
     .from("appointments")
     .select("*")
     .eq("patient_id", patient.id)
+    .in("status", ["scheduled", "confirmed"])
     .gte("appointment_date", now)
     .order("appointment_date", { ascending: true })
 
@@ -33,7 +35,17 @@ export default async function PatientAppointmentsPage() {
     .lt("appointment_date", now)
     .order("appointment_date", { ascending: false })
 
-  const AppointmentCard = ({ appointment }: { appointment: any }) => (
+  const { data: rescheduleRequests } = await supabase
+    .from("appointment_reschedule_requests")
+    .select("*")
+    .eq("patient_id", patient.id)
+    .order("created_at", { ascending: false })
+
+  const requestByAppointmentId = new Map(
+    (rescheduleRequests ?? []).map((request) => [request.appointment_id, request]),
+  )
+
+  const AppointmentCard = ({ appointment, canRequestReschedule }: { appointment: any; canRequestReschedule: boolean }) => (
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between">
@@ -76,6 +88,12 @@ export default async function PatientAppointmentsPage() {
             <p className="text-sm">{appointment.notes}</p>
           </div>
         )}
+        {canRequestReschedule && (
+          <PatientRescheduleActions
+            appointmentId={appointment.id}
+            existingRequest={requestByAppointmentId.get(appointment.id)}
+          />
+        )}
       </CardContent>
     </Card>
   )
@@ -96,7 +114,7 @@ export default async function PatientAppointmentsPage() {
         <TabsContent value="upcoming" className="space-y-4">
           {upcomingAppointments && upcomingAppointments.length > 0 ? (
             upcomingAppointments.map((appointment) => (
-              <AppointmentCard key={appointment.id} appointment={appointment} />
+              <AppointmentCard key={appointment.id} appointment={appointment} canRequestReschedule />
             ))
           ) : (
             <Card>
@@ -109,7 +127,9 @@ export default async function PatientAppointmentsPage() {
 
         <TabsContent value="past" className="space-y-4">
           {pastAppointments && pastAppointments.length > 0 ? (
-            pastAppointments.map((appointment) => <AppointmentCard key={appointment.id} appointment={appointment} />)
+            pastAppointments.map((appointment) => (
+              <AppointmentCard key={appointment.id} appointment={appointment} canRequestReschedule={false} />
+            ))
           ) : (
             <Card>
               <CardContent className="py-12">

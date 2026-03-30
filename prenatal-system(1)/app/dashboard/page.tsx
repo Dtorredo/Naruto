@@ -6,6 +6,14 @@ import { DashboardCharts } from "@/components/dashboard-charts"
 export default async function DashboardPage() {
   const supabase = await createClient()
 
+  const now = new Date()
+  const todayStart = new Date(now)
+  todayStart.setHours(0, 0, 0, 0)
+  const tomorrowStart = new Date(todayStart)
+  tomorrowStart.setDate(todayStart.getDate() + 1)
+  const nextThirtyDays = new Date(now)
+  nextThirtyDays.setDate(now.getDate() + 30)
+
   // Fetch user profile
   const {
     data: { user },
@@ -19,7 +27,9 @@ export default async function DashboardPage() {
   const { count: totalAppointments } = await supabase
     .from("appointments")
     .select("*", { count: "exact", head: true })
-    .gte("appointment_date", new Date().toISOString())
+    .in("status", ["scheduled", "confirmed"])
+    .gte("appointment_date", now.toISOString())
+    .lt("appointment_date", nextThirtyDays.toISOString())
 
   const { count: activePregnancies } = await supabase
     .from("prenatal_records")
@@ -29,8 +39,9 @@ export default async function DashboardPage() {
   const { count: todayAppointments } = await supabase
     .from("appointments")
     .select("*", { count: "exact", head: true })
-    .gte("appointment_date", new Date().toISOString().split("T")[0])
-    .lt("appointment_date", new Date(Date.now() + 86400000).toISOString().split("T")[0])
+    .in("status", ["scheduled", "confirmed"])
+    .gte("appointment_date", todayStart.toISOString())
+    .lt("appointment_date", tomorrowStart.toISOString())
 
   // Fetch recent appointments
   const { data: recentAppointments } = await supabase
@@ -41,6 +52,8 @@ export default async function DashboardPage() {
       patients (first_name, last_name)
     `,
     )
+    .in("status", ["scheduled", "confirmed"])
+    .gte("appointment_date", now.toISOString())
     .order("appointment_date", { ascending: true })
     .limit(5)
 

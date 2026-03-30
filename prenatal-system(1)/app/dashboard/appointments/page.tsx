@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AddAppointmentDialog } from "@/components/add-appointment-dialog"
+import { RescheduleRequestActions } from "@/components/reschedule-request-actions"
 import { Calendar, Clock, User } from "lucide-react"
 
 export default async function AppointmentsPage() {
@@ -19,6 +20,7 @@ export default async function AppointmentsPage() {
       patients (first_name, last_name, phone)
     `,
     )
+    .in("status", ["scheduled", "confirmed"])
     .gte("appointment_date", today.toISOString())
     .order("appointment_date", { ascending: true })
 
@@ -33,6 +35,26 @@ export default async function AppointmentsPage() {
     .lt("appointment_date", today.toISOString())
     .order("appointment_date", { ascending: false })
     .limit(20)
+
+  const { data: rescheduleRequests } = await supabase
+    .from("appointment_reschedule_requests")
+    .select(
+      `
+      id,
+      status,
+      preferred_datetime,
+      proposed_datetime,
+      patient_notes,
+      doctor_notes,
+      appointments (
+        appointment_date,
+        appointment_type,
+        patients (first_name, last_name)
+      )
+    `,
+    )
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
 
   const todayAppointments = upcomingAppointments?.filter((apt) => {
     const aptDate = new Date(apt.appointment_date)
@@ -98,6 +120,8 @@ export default async function AppointmentsPage() {
     </Card>
   )
 
+  const pendingRequests = rescheduleRequests ?? []
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -107,6 +131,23 @@ export default async function AppointmentsPage() {
         </div>
         <AddAppointmentDialog />
       </div>
+
+      {pendingRequests.length > 0 && (
+        <Card className="border-destructive/20 bg-destructive/5">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between gap-3">
+              <span>Pending Reschedule Requests</span>
+              <Badge variant="destructive">{pendingRequests.length}</Badge>
+            </CardTitle>
+            <CardDescription>Review patient reschedule requests and respond with a new time or approval.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {pendingRequests.map((request: any) => (
+              <RescheduleRequestActions key={request.id} request={request} />
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="today" className="w-full">
         <TabsList className="grid w-full grid-cols-3">

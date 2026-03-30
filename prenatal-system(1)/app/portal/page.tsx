@@ -41,6 +41,7 @@ export default async function PatientPortalPage() {
     .from("appointments")
     .select("*")
     .eq("patient_id", patient.id)
+    .in("status", ["scheduled", "confirmed"])
     .gte("appointment_date", new Date().toISOString())
     .order("appointment_date", { ascending: true })
     .limit(5)

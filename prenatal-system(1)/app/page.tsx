@@ -16,9 +16,6 @@ export default function LandingPage() {
             <Link href="/auth/login">
               <Button variant="ghost">Login</Button>
             </Link>
-            <Link href="/auth/sign-up">
-              <Button>Get Started</Button>
-            </Link>
           </div>
         </div>
       </header>
@@ -31,11 +28,6 @@ export default function LandingPage() {
           medical records, and patient progress all in one secure platform.
         </p>
         <div className="flex items-center justify-center gap-4">
-          <Link href="/auth/sign-up">
-            <Button size="lg" className="text-lg">
-              Start Free Trial
-            </Button>
-          </Link>
           <Link href="/auth/login">
             <Button size="lg" variant="outline" className="text-lg bg-transparent">
               Sign In
@@ -93,7 +85,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t bg-muted/30 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2025 PreNatal Care. Secure, HIPAA-compliant patient management.</p>
+          <p>© 2026 PreNatal Care. Secure, HIPAA-compliant patient management.</p>
         </div>
       </footer>
     </div>
