@@ -5,6 +5,5 @@
       "Bash(fly *)",
       "Bash(sleep *)"
     ]
-  },
-  "$version": 3
+  }
 }

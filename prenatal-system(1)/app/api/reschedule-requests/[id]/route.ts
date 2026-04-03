@@ -82,7 +82,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Missing SUPABASE_SERVICE_ROLE_KEY" }, { status: 500 })
   }
 
-  const adminClient = createSupabaseAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
+  const adminClient = createSupabaseAdminClient(process.env.SUPABASE_URL!, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 

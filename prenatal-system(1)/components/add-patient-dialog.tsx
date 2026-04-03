@@ -15,14 +15,18 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
+
+const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const
 
 export function AddPatientDialog() {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [selectedBloodType, setSelectedBloodType] = useState<string>("")
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -40,7 +44,7 @@ export function AddPatientDialog() {
       address: formData.get("address"),
       emergencyContactName: formData.get("emergencyContactName"),
       emergencyContactPhone: formData.get("emergencyContactPhone"),
-      bloodType: formData.get("bloodType"),
+      bloodType: selectedBloodType || null,
       allergies: formData.get("allergies"),
       medicalHistory: formData.get("medicalHistory"),
     }
@@ -56,6 +60,16 @@ export function AddPatientDialog() {
     if (!response.ok) {
       setErrorMessage(result?.error || "Unable to create patient record")
       setIsLoading(false)
+      
+      // If patient already exists, optionally redirect to their page
+      if (response.status === 409 && result?.patientId) {
+        toast({
+          title: "Patient already exists",
+          description: "A patient with this email already exists in the system.",
+          variant: "destructive",
+        })
+      }
+      
       return
     }
 
@@ -67,6 +81,7 @@ export function AddPatientDialog() {
     })
 
     setOpen(false)
+    setSelectedBloodType("")
     router.refresh()
   }
 
@@ -132,7 +147,18 @@ export function AddPatientDialog() {
 
           <div className="space-y-2">
             <Label htmlFor="bloodType">Blood Type</Label>
-            <Input id="bloodType" name="bloodType" placeholder="e.g., O+, A-, B+" />
+            <Select value={selectedBloodType} onValueChange={setSelectedBloodType}>
+              <SelectTrigger id="bloodType">
+                <SelectValue placeholder="Select blood type" />
+              </SelectTrigger>
+              <SelectContent>
+                {BLOOD_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

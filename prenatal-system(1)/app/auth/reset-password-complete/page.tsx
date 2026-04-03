@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Activity, CheckCircle, Lock } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Suspense, useState } from "react"
+import { Suspense, useState, useEffect } from "react"
 
 function ResetPasswordCompleteForm() {
   const [password, setPassword] = useState("")
@@ -17,7 +17,58 @@ function ResetPasswordCompleteForm() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(true)
   const router = useRouter()
+
+  useEffect(() => {
+    // Process the recovery token from URL
+    const setupAuth = async () => {
+      const supabase = createClient()
+      
+      // Check if we have a hash fragment with tokens
+      const hash = window.location.hash
+      if (!hash) {
+        setError("No reset token found. Please use the link from your email.")
+        setIsProcessing(false)
+        return
+      }
+
+      try {
+        // Parse the hash fragment
+        const params = new URLSearchParams(hash.substring(1))
+        const accessToken = params.get("access_token")
+        const refreshToken = params.get("refresh_token")
+        const type = params.get("type")
+
+        if (type !== "recovery" || !accessToken) {
+          setError("Invalid reset link. Please request a new password reset.")
+          setIsProcessing(false)
+          return
+        }
+
+        // Set the session manually from the tokens
+        if (refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+
+          if (sessionError) {
+            console.error("Session error:", sessionError)
+            setError("Failed to process your reset link. Please request a new one.")
+          }
+        }
+
+        setIsProcessing(false)
+      } catch (err) {
+        console.error("Token processing error:", err)
+        setError("Invalid or expired reset link. Please request a new one.")
+        setIsProcessing(false)
+      }
+    }
+
+    setupAuth()
+  }, [])
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,6 +107,16 @@ function ResetPasswordCompleteForm() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isProcessing) {
+    return (
+      <CardContent>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <p className="text-muted-foreground">Processing your reset link...</p>
+        </div>
+      </CardContent>
+    )
   }
 
   if (success) {

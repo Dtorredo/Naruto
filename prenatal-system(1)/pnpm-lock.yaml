@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@getbrevo/brevo':
+        specifier: ^5.0.3
+        version: 5.0.3
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.64.0(react@18.3.1))
@@ -229,6 +232,10 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
+
+  '@getbrevo/brevo@5.0.3':
+    resolution: {integrity: sha512-AIAFXiUkk5fpl8cVttGWZfxt84PFPS7DnB0+fRqd70kFsbwPvNfdYhrnD0tXL5jLmGrSeLv2pfACkzFD7gYeeA==}
+    engines: {node: '>=18.0.0'}
 
   '@hookform/resolvers@3.10.0':
     resolution: {integrity: sha512-79Dv+3mDF7i+2ajj7SkypSKHhl1cbln1OGavqrsF7p6mbUv11xpqpacPsGDCTRvCSjEEIez2ef1NveSVL3b0Ag==}
@@ -1874,6 +1881,8 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
 
   '@floating-ui/utils@0.2.10': {}
+
+  '@getbrevo/brevo@5.0.3': {}
 
   '@hookform/resolvers@3.10.0(react-hook-form@7.64.0(react@18.3.1))':
     dependencies:

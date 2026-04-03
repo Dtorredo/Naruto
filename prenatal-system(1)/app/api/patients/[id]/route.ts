@@ -3,14 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 
 const STAFF_ROLES = new Set(["doctor", "nurse", "admin"])
 
-type RouteParams = {
-  params: {
-    id: string
-  }
-}
-
-export async function DELETE(_request: Request, { params }: RouteParams) {
-  const patientId = params?.id
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id: patientId } = await params
 
   if (!patientId) {
     return NextResponse.json({ error: "Patient id is required" }, { status: 400 })

@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js"
+import { sendWelcomeEmail } from "@/lib/email"
 
 const STAFF_ROLES = new Set(["doctor", "nurse", "admin"])
 
-type RouteParams = {
-  params: {
-    id: string
-  }
-}
-
-export async function POST(request: Request, { params }: RouteParams) {
-  const patientId = params?.id
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id: patientId } = await params
 
   if (!patientId) {
     return NextResponse.json({ error: "Patient id is required" }, { status: 400 })
@@ -52,29 +47,72 @@ export async function POST(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Patient record is missing an email address." }, { status: 400 })
   }
 
+  // Get the user_id to check if they need password reset or new invite
+  const { data: patientWithUserId } = await supabase
+    .from("patients")
+    .select("user_id")
+    .eq("id", patientId)
+    .single()
+
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceRoleKey) {
     return NextResponse.json({ error: "Missing SUPABASE_SERVICE_ROLE_KEY" }, { status: 500 })
   }
 
-  const adminClient = createSupabaseAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
+  const adminClient = createSupabaseAdminClient(process.env.SUPABASE_URL!, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '')
-  const redirectTo =
-    process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${origin}/auth/set-password?email=${encodeURIComponent(patient.email)}`
+  const origin = request.headers.get("origin") || process.env.SUPABASE_URL?.replace(/\/$/, '')
 
-  const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(patient.email, {
-    redirectTo,
-    data: {
+  // Generate a proper password reset link with Supabase token
+  const { data: resetData, error: resetLinkError } = await adminClient.auth.admin.generateLink({
+    type: 'recovery',
+    email: patient.email,
+    options: {
+      redirectTo: `${origin}/auth/reset-password-complete`,
+    }
+  })
+
+  if (resetLinkError) {
+    console.error("Error generating reset link:", resetLinkError)
+    return NextResponse.json({ error: "Failed to generate setup link" }, { status: 500 })
+  }
+
+  const passwordSetupLink = resetData.properties?.action_link || `${origin}/auth/reset-password-complete`
+
+  // If patient has user_id, they might already be registered - send password reset instead
+  if (patientWithUserId?.user_id) {
+    // Just resend the welcome email again since they're already registered
+    try {
+      await sendWelcomeEmail({
+        to: patient.email,
+        firstName: patient.first_name,
+        lastName: patient.last_name,
+        passwordSetupLink,
+      })
+      console.log(`Welcome email resent to ${patient.email} (existing user)`)
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError)
+      return NextResponse.json({ error: "Failed to send welcome email" }, { status: 500 })
+    }
+
+    return NextResponse.json({ ok: true, emailType: "welcome_resent" })
+  }
+
+  // If no user_id, create user and send welcome email
+  // Create user in Supabase
+  const { data: userData, error: createUserError } = await adminClient.auth.admin.createUser({
+    email: patient.email,
+    email_confirm: false,
+    user_metadata: {
       full_name: `${patient.first_name} ${patient.last_name}`.trim(),
       role: "patient",
     },
   })
 
-  if (inviteError) {
-    const normalizedMessage = inviteError.message.toLowerCase()
+  if (createUserError) {
+    const normalizedMessage = createUserError.message.toLowerCase()
     const alreadyRegisteredPhrases = [
       "already registered",
       "already been registered",
@@ -89,8 +127,31 @@ export async function POST(request: Request, { params }: RouteParams) {
       )
     }
 
-    return NextResponse.json({ error: inviteError.message }, { status: 400 })
+    console.error("User creation error:", createUserError)
+    return NextResponse.json({ error: createUserError.message }, { status: 400 })
   }
 
-  return NextResponse.json({ ok: true })
+  // Update patient record with user_id
+  if (userData.user?.id) {
+    await supabase
+      .from("patients")
+      .update({ user_id: userData.user.id })
+      .eq("id", patientId)
+  }
+
+  // Send welcome email via Resend
+  try {
+    await sendWelcomeEmail({
+      to: patient.email,
+      firstName: patient.first_name,
+      lastName: patient.last_name,
+      passwordSetupLink,
+    })
+    console.log(`Welcome email resent to ${patient.email}`)
+  } catch (emailError) {
+    console.error("Failed to send welcome email:", emailError)
+    return NextResponse.json({ error: "Failed to send welcome email" }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true, emailType: "welcome" })
 }
