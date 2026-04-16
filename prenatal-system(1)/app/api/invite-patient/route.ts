@@ -45,9 +45,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 })
     }
 
-    const resendApiKey = process.env.RESEND_API_KEY
-    if (!resendApiKey) {
-      console.error("[invite-patient] Missing RESEND_API_KEY")
+    const brevoApiKey = process.env.BREVO_API_KEY
+    if (!brevoApiKey) {
+      console.error("[invite-patient] Missing BREVO_API_KEY")
       return NextResponse.json({ error: "Email service not configured" }, { status: 500 })
     }
 
@@ -55,23 +55,21 @@ export async function POST(request: Request) {
       auth: { persistSession: false, autoRefreshToken: false },
     })
 
-    const origin = request.headers.get("origin") || process.env.SUPABASE_URL?.replace(/\/$/, '')
-    
-    // Generate a proper password reset link with Supabase token
-    const { data: resetData, error: resetError } = await adminClient.auth.admin.generateLink({
-      type: 'recovery',
-      email,
-      options: {
-        redirectTo: `${origin}/auth/reset-password-complete`,
-      }
-    })
+    const appOrigin = request.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
 
-    if (resetError) {
-      console.error("Error generating reset link:", resetError)
-      return NextResponse.json({ error: "Failed to generate setup link" }, { status: 500 })
+    // Check if patient already exists by email before creating auth user
+    const { data: existingByEmail } = await adminClient
+      .from("patients")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle()
+
+    if (existingByEmail?.id) {
+      return NextResponse.json(
+        { error: "A patient with this email address already exists.", patientId: existingByEmail.id },
+        { status: 409 },
+      )
     }
-
-    const passwordSetupLink = resetData.properties?.action_link || `${origin}/auth/reset-password-complete`
 
     // Create user in Supabase
     const { data: inviteData, error: inviteError } = await adminClient.auth.admin.createUser({
@@ -91,6 +89,22 @@ export async function POST(request: Request) {
       )
     }
 
+    // Generate a proper password reset link with Supabase token
+    const { data: resetData, error: resetError } = await adminClient.auth.admin.generateLink({
+      type: "recovery",
+      email,
+      options: {
+        redirectTo: `${appOrigin}/auth/reset-password-complete`,
+      },
+    })
+
+    if (resetError) {
+      console.error("Error generating reset link:", resetError)
+      return NextResponse.json({ error: "Failed to generate setup link" }, { status: 500 })
+    }
+
+    const passwordSetupLink = resetData.properties?.action_link || `${appOrigin}/auth/reset-password-complete`
+
     const invitedUserId = inviteData.user?.id ?? null
 
     if (invitedUserId) {
@@ -103,22 +117,6 @@ export async function POST(request: Request) {
       if (existing?.id) {
         return NextResponse.json(
           { error: "Patient record already linked to this account.", patientId: existing.id },
-          { status: 409 },
-        )
-      }
-    }
-
-    // Check if patient already exists by email
-    if (email) {
-      const { data: existingByEmail } = await adminClient
-        .from("patients")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle()
-
-      if (existingByEmail?.id) {
-        return NextResponse.json(
-          { error: "A patient with this email address already exists.", patientId: existingByEmail.id },
           { status: 409 },
         )
       }

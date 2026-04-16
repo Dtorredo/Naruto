@@ -54,11 +54,27 @@ export function PatientRescheduleActions({ appointmentId, existingRequest }: Pat
     setNotes("")
   }
 
+  const toIsoDateTime = (dateValue: string, timeValue: string) => {
+    const localDateTime = new Date(`${dateValue}T${timeValue}`)
+    if (Number.isNaN(localDateTime.getTime())) return null
+    return localDateTime.toISOString()
+  }
+
   const submitRequest = async () => {
     if (!requestDate || !requestTime) {
       toast({
         title: "Missing date or time",
         description: "Choose a preferred date and time for the reschedule request.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const preferredDateTime = toIsoDateTime(requestDate, requestTime)
+    if (!preferredDateTime) {
+      toast({
+        title: "Invalid date or time",
+        description: "Please choose a valid preferred date and time.",
         variant: "destructive",
       })
       return
@@ -70,7 +86,7 @@ export function PatientRescheduleActions({ appointmentId, existingRequest }: Pat
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          preferredDateTime: `${requestDate}T${requestTime}:00`,
+          preferredDateTime,
           notes,
         }),
       })

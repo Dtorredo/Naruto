@@ -28,6 +28,12 @@ export function AddAppointmentDialog() {
   const [appointmentType, setAppointmentType] = useState("checkup")
   const router = useRouter()
 
+  const toIsoDateTime = (dateValue: string, timeValue: string) => {
+    const localDateTime = new Date(`${dateValue}T${timeValue}`)
+    if (Number.isNaN(localDateTime.getTime())) return null
+    return localDateTime.toISOString()
+  }
+
   useEffect(() => {
     const fetchPatients = async () => {
       const supabase = createClient()
@@ -50,9 +56,16 @@ export function AddAppointmentDialog() {
 
     const appointmentDate = formData.get("appointmentDate") as string
     const appointmentTime = formData.get("appointmentTime") as string
-    const dateTime = `${appointmentDate}T${appointmentTime}:00`
+    const dateTime = toIsoDateTime(appointmentDate, appointmentTime)
 
-    const { error } = await supabase.from("appointments").insert({
+    if (!dateTime) {
+      setIsLoading(false)
+      return
+    }
+
+    const { data: insertedAppointment, error } = await supabase
+      .from("appointments")
+      .insert({
       patient_id: selectedPatient,
       doctor_id: user?.id,
       appointment_date: dateTime,
@@ -61,11 +74,30 @@ export function AddAppointmentDialog() {
       status: "scheduled",
       notes: formData.get("notes") as string,
       created_by: user?.id,
-    })
+      })
+      .select("id")
+      .single()
 
     setIsLoading(false)
 
     if (!error) {
+      if (insertedAppointment?.id) {
+        try {
+          const notifyResponse = await fetch("/api/notify-appointment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ appointmentId: insertedAppointment.id }),
+          })
+
+          if (!notifyResponse.ok) {
+            const notifyResult = await notifyResponse.json().catch(() => ({}))
+            console.error("Failed to send appointment notification:", notifyResult)
+          }
+        } catch (notifyError) {
+          console.error("Failed to send appointment notification:", notifyError)
+        }
+      }
+
       setOpen(false)
       router.refresh()
     }

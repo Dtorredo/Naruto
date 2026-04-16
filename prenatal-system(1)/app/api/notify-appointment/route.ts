@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     const appointmentDate = new Date(appointment.appointment_date)
 
     // Send email notification
-    const { data: emailData, error: emailError } = await sendAppointmentCreatedEmail({
+    const emailResult = await sendAppointmentCreatedEmail({
       to: patient.email,
       firstName: patient.first_name,
       lastName: patient.last_name,
@@ -63,17 +63,9 @@ export async function POST(request: Request) {
       notes: appointment.notes,
     })
 
-    if (emailError) {
-      console.error("Error sending appointment notification:", emailError)
-      return NextResponse.json({ 
-        error: "Failed to send email notification",
-        details: emailError 
-      }, { status: 500 })
-    }
-
     return NextResponse.json({
       message: "Appointment notification sent successfully",
-      emailId: emailData?.id,
+      emailId: emailResult?.messageId ?? null,
       appointmentId,
     })
   } catch (error) {

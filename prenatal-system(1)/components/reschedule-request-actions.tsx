@@ -55,7 +55,25 @@ export function RescheduleRequestActions({ request }: RescheduleRequestActionsPr
   const [proposedTime, setProposedTime] = useState("")
   const [notes, setNotes] = useState("")
 
+  const toIsoDateTime = (dateValue: string, timeValue: string) => {
+    const localDateTime = new Date(`${dateValue}T${timeValue}`)
+    if (Number.isNaN(localDateTime.getTime())) return null
+    return localDateTime.toISOString()
+  }
+
   const submitAction = async (action: "approve" | "decline" | "propose") => {
+    const proposedDateTime =
+      action === "propose" && proposedDate && proposedTime ? toIsoDateTime(proposedDate, proposedTime) : undefined
+
+    if (action === "propose" && !proposedDateTime) {
+      toast({
+        title: "Invalid date or time",
+        description: "Please choose a valid proposed date and time.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const response = await fetch(`/api/reschedule-requests/${request.id}`, {
@@ -63,7 +81,7 @@ export function RescheduleRequestActions({ request }: RescheduleRequestActionsPr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action,
-          proposedDateTime: proposedDate && proposedTime ? `${proposedDate}T${proposedTime}:00` : undefined,
+          proposedDateTime,
           notes,
         }),
       })

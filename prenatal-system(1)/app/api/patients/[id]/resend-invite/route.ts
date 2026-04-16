@@ -63,26 +63,27 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  const origin = request.headers.get("origin") || process.env.SUPABASE_URL?.replace(/\/$/, '')
+  const appOrigin = request.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
 
-  // Generate a proper password reset link with Supabase token
-  const { data: resetData, error: resetLinkError } = await adminClient.auth.admin.generateLink({
-    type: 'recovery',
-    email: patient.email,
-    options: {
-      redirectTo: `${origin}/auth/reset-password-complete`,
-    }
-  })
-
-  if (resetLinkError) {
-    console.error("Error generating reset link:", resetLinkError)
-    return NextResponse.json({ error: "Failed to generate setup link" }, { status: 500 })
-  }
-
-  const passwordSetupLink = resetData.properties?.action_link || `${origin}/auth/reset-password-complete`
+  let userIdForPatient = patientWithUserId?.user_id ?? null
 
   // If patient has user_id, they might already be registered - send password reset instead
-  if (patientWithUserId?.user_id) {
+  if (userIdForPatient) {
+    const { data: resetData, error: resetLinkError } = await adminClient.auth.admin.generateLink({
+      type: "recovery",
+      email: patient.email,
+      options: {
+        redirectTo: `${appOrigin}/auth/reset-password-complete`,
+      },
+    })
+
+    if (resetLinkError) {
+      console.error("Error generating reset link:", resetLinkError)
+      return NextResponse.json({ error: "Failed to generate setup link" }, { status: 500 })
+    }
+
+    const passwordSetupLink = resetData.properties?.action_link || `${appOrigin}/auth/reset-password-complete`
+
     // Just resend the welcome email again since they're already registered
     try {
       await sendWelcomeEmail({
@@ -138,6 +139,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       .update({ user_id: userData.user.id })
       .eq("id", patientId)
   }
+
+  const { data: resetData, error: resetLinkError } = await adminClient.auth.admin.generateLink({
+    type: "recovery",
+    email: patient.email,
+    options: {
+      redirectTo: `${appOrigin}/auth/reset-password-complete`,
+    },
+  })
+
+  if (resetLinkError) {
+    console.error("Error generating reset link:", resetLinkError)
+    return NextResponse.json({ error: "Failed to generate setup link" }, { status: 500 })
+  }
+
+  const passwordSetupLink = resetData.properties?.action_link || `${appOrigin}/auth/reset-password-complete`
 
   // Send welcome email via Resend
   try {

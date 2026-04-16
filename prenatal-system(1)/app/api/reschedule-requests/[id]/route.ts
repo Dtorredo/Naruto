@@ -104,31 +104,14 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         return NextResponse.json({ error: "This request is missing a proposed date and time." }, { status: 400 })
       }
 
-      const { error: appointmentError } = await adminClient
-        .from("appointments")
-        .update({
-          appointment_date: rescheduleRequest.proposed_datetime,
-          status: "confirmed",
-          updated_at: now,
-        })
-        .eq("id", rescheduleRequest.appointment_id)
+      const { error: applyError } = await adminClient.rpc("apply_reschedule_request", {
+        p_request_id: requestId,
+        p_new_datetime: rescheduleRequest.proposed_datetime,
+        p_reviewer_id: user.id,
+      })
 
-      if (appointmentError) {
-        return NextResponse.json({ error: appointmentError.message }, { status: 400 })
-      }
-
-      const { error: updateError } = await adminClient
-        .from("appointment_reschedule_requests")
-        .update({
-          status: "approved",
-          reviewed_by: user.id,
-          reviewed_at: now,
-          updated_at: now,
-        })
-        .eq("id", requestId)
-
-      if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 400 })
+      if (applyError) {
+        return NextResponse.json({ error: applyError.message }, { status: 400 })
       }
 
       return NextResponse.json({ ok: true })
@@ -168,31 +151,14 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "This request is missing a preferred date and time." }, { status: 400 })
     }
 
-    const { error: appointmentError } = await adminClient
-      .from("appointments")
-      .update({
-        appointment_date: rescheduleRequest.preferred_datetime,
-        status: "confirmed",
-        updated_at: now,
-      })
-      .eq("id", rescheduleRequest.appointment_id)
+    const { error: applyError } = await adminClient.rpc("apply_reschedule_request", {
+      p_request_id: requestId,
+      p_new_datetime: rescheduleRequest.preferred_datetime,
+      p_reviewer_id: user.id,
+    })
 
-    if (appointmentError) {
-      return NextResponse.json({ error: appointmentError.message }, { status: 400 })
-    }
-
-    const { error: updateError } = await adminClient
-      .from("appointment_reschedule_requests")
-      .update({
-        status: "approved",
-        reviewed_by: user.id,
-        reviewed_at: now,
-        updated_at: now,
-      })
-      .eq("id", requestId)
-
-    if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 400 })
+    if (applyError) {
+      return NextResponse.json({ error: applyError.message }, { status: 400 })
     }
 
     return NextResponse.json({ ok: true })
