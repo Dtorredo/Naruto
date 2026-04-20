@@ -54,10 +54,9 @@ export function PatientRescheduleActions({ appointmentId, existingRequest }: Pat
     setNotes("")
   }
 
-  const toIsoDateTime = (dateValue: string, timeValue: string) => {
-    const localDateTime = new Date(`${dateValue}T${timeValue}`)
-    if (Number.isNaN(localDateTime.getTime())) return null
-    return localDateTime.toISOString()
+  const toDateTimeValue = (dateValue: string, timeValue: string) => {
+    if (!dateValue || !timeValue) return null
+    return `${dateValue}T${timeValue}:00`
   }
 
   const submitRequest = async () => {
@@ -70,7 +69,7 @@ export function PatientRescheduleActions({ appointmentId, existingRequest }: Pat
       return
     }
 
-    const preferredDateTime = toIsoDateTime(requestDate, requestTime)
+    const preferredDateTime = toDateTimeValue(requestDate, requestTime)
     if (!preferredDateTime) {
       toast({
         title: "Invalid date or time",

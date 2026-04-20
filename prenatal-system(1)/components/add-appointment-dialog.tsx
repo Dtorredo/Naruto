@@ -28,10 +28,9 @@ export function AddAppointmentDialog() {
   const [appointmentType, setAppointmentType] = useState("checkup")
   const router = useRouter()
 
-  const toIsoDateTime = (dateValue: string, timeValue: string) => {
-    const localDateTime = new Date(`${dateValue}T${timeValue}`)
-    if (Number.isNaN(localDateTime.getTime())) return null
-    return localDateTime.toISOString()
+  const toDateTimeValue = (dateValue: string, timeValue: string) => {
+    if (!dateValue || !timeValue) return null
+    return `${dateValue}T${timeValue}:00`
   }
 
   useEffect(() => {
@@ -56,7 +55,7 @@ export function AddAppointmentDialog() {
 
     const appointmentDate = formData.get("appointmentDate") as string
     const appointmentTime = formData.get("appointmentTime") as string
-    const dateTime = toIsoDateTime(appointmentDate, appointmentTime)
+    const dateTime = toDateTimeValue(appointmentDate, appointmentTime)
 
     if (!dateTime) {
       setIsLoading(false)

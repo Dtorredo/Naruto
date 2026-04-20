@@ -92,7 +92,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     appointment_id: appointment.id,
     patient_id: patient.id,
     status: "pending",
-    preferred_datetime: preferredDate.toISOString(),
+    preferred_datetime: preferredDateTime,
     patient_notes: patientNotes || null,
   })
 

@@ -55,15 +55,14 @@ export function RescheduleRequestActions({ request }: RescheduleRequestActionsPr
   const [proposedTime, setProposedTime] = useState("")
   const [notes, setNotes] = useState("")
 
-  const toIsoDateTime = (dateValue: string, timeValue: string) => {
-    const localDateTime = new Date(`${dateValue}T${timeValue}`)
-    if (Number.isNaN(localDateTime.getTime())) return null
-    return localDateTime.toISOString()
+  const toDateTimeValue = (dateValue: string, timeValue: string) => {
+    if (!dateValue || !timeValue) return null
+    return `${dateValue}T${timeValue}:00`
   }
 
   const submitAction = async (action: "approve" | "decline" | "propose") => {
     const proposedDateTime =
-      action === "propose" && proposedDate && proposedTime ? toIsoDateTime(proposedDate, proposedTime) : undefined
+      action === "propose" && proposedDate && proposedTime ? toDateTimeValue(proposedDate, proposedTime) : undefined
 
     if (action === "propose" && !proposedDateTime) {
       toast({

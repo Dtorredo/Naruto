@@ -181,7 +181,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       .from("appointment_reschedule_requests")
       .update({
         status: "proposed",
-        proposed_datetime: proposedDate.toISOString(),
+        proposed_datetime: proposedDateTime,
         doctor_notes: notes || null,
         reviewed_by: user.id,
         reviewed_at: now,
